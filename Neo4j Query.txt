@@ -1,0 +1,166 @@
+http://localhost:8085/api/v1/addClient
+{   
+    "nodeName":"ROOT",
+    "clientGroups": [{"clientCode":"1","clientName":"Client 1"}, {"clientCode":"2","clientName":"Client 2"}]
+}
+------------------------------------------------------------------------------------------------------------
+http://localhost:8085/api/v1/addCan
+
+{   
+    "clientCode":"1",
+    "canSet": [{"canCode":"1","canName":"Chain 1"}]
+}
+-------------------------------------------------------------------------------------------------------------------------
+http://localhost:8085/api/v1/addNTT
+{   
+    "clientCode":"1",
+    "nttSet": [{"nttCode":"1","nttName":"NTT A"}]
+}
+
+------------------------------------------------------------------------------------------------------------
+http://localhost:8085/api/v1/addCanUnderCan
+
+{   
+    "clientCode":"1",
+	"canCode":"5",
+    "canOfCan": [{"canCode":"1","canName":"CAN A"}]
+}
+-------------------------------------------------------------------------------------------------------------------------
+http://localhost:8085/api/v1/addNttUnderNtt
+{   
+    "clientCode":"1",
+	"nttCode":"3",
+	"canCode":"3",
+    "nttOfNtt": [{"nttCode":"1","nttName":"NTT A"}]
+}
+--------------------------------------------------------------------------------------------------------------------------------
+http://localhost:8085/api/v1/addMID
+
+{       
+    "clientCode":"1",
+	"isCan":true,
+	"nttCode":"1550",
+    "canCode":"500",
+    "dimCode":"100000",
+    "dimName":"DIM 100000"	
+}
+-----------------------------------------------------------------------------------------------------------------------------
+
+http://localhost:8085/api/v1/getAllClients
+http://localhost:8085/api/v1/getAllNtts
+http://localhost:8085/api/v1/getAllCans
+http://localhost:8085/api/v1/getAllDims
+http://localhost:8085/api/v1/getAllDimsUnderClient/Client 1
+http://localhost:8085/api/v1/getAllDimsByCanName/CAN 1
+http://localhost:8085/api/v1/getAllDimsByNttName/NTT 1714
+
+
+
+CREATE (a:STD_PERSONAL_INFO { mobile : "9999999999", DOB: "03/06/2016"});
+
+MATCH (n) DETACH DELETE n;
+
+MATCH (j:DIM) WHERE j.dimName = 'DIM 2810' RETURN j;
+MATCH (j:CAN) WHERE j.canName = 'CAN 1' RETURN j;
+MATCH p=(r:ROOT)-[*]->(c:CAN where c.canName="CAN 1") return p;
+MATCH p=(r:ROOT)-[*]->(d:DIM where d.dimName="DIM 5800") return p;
+
+MATCH (CAN)-[:CAN_TO_DIM]-> (tom:DIM {dimName: "DIM 2810"}) RETURN tom,CAN;
+
+
+Match p=(ROOT)-[*]->(DIM) return p limit 100;
+--CAN of a DIM
+MATCH p=(c:DIM where c.dimName="DIM 2810")<-[*]-(d:CAN) return p;
+MATCH p=(c:DIM where c.dimName="DIM 2810")<-[*]-(d:CAN where d.canName="CAN 9") return p;
+--NTT of a DIM
+MATCH p=(c:DIM where c.dimName="DIM 2843")<-[*]-(d:NTT) return p;
+MATCH p=(c:DIM where c.dimName="DIM 2843")<-[*]-(d:NTT where d.nttName="NTT 9") return p;
+--All relation of a DIM (Including CAN)
+MATCH p=(r:ROOT)-[*]->(a:DIM where a.dimName="DIM 2843") return p;
+MATCH p=(r:ROOT)-[*]->(c:CAN where c.canName="CAN 9")-[*]->(a:DIM where a.dimName="DIM 2843") return p;
+--All relation of a DIM (Including NTT)
+MATCH p=(r:ROOT)-[*]->(c:NTT where c.nttName="NTT 1") return p;
+MATCH p=(r:ROOT)-[*]->(c:NTT where c.nttName="NTT 1")-[*]->(a:DIM) return p;
+MATCH p=(r:ROOT)-[*]->(c:NTT where c.nttName="NTT 1")-[*]->(a:DIM where a.dimName="DIM 1304") return p;
+--All relation of a DIM (Including CAN and NTT)
+MATCH p=(r:ROOT)-[*]->(a:DIM where a.dimName="DIM 2843") return p;
+--All DIM of a CAN
+Match p=(c:CAN where c.canName="CAN 1")-[*]->(d:DIM) return p;
+--All DIM of a NTT
+Match p=(n:NTT where n.nttName="NTT 1")-[*]->(d:DIM) return p;
+--All DIM of a CAN from ROOT
+Match p=(r:ROOT)-[*]->(c:CAN where c.canName="CAN 1")-[*]->(d:DIM) return p;
+Match p=(r:ROOT)-[*]->(c:CAN where c.canName IN['CAN 1', 'CAN 2'])-[*]->(d:DIM) return p;
+--Specific DIM of a CAN from ROOT
+MATCH p=(r:ROOT)-[*]->(c:CAN where c.canName="CAN 1")-[*]->(d:DIM where d.dimName="DIM 1201") return p;
+--CAN Under CAN and NTT under NTT
+Match p=(r:ROOT)-[*]->(c:CAN where c.canName="CAN 825")-[*]->(d:DIM) return p;
+Match p=(r:ROOT)-[*]->(c:NTT where c.nttName="NTT 825")-[*]->(d:DIM) return p;
+
+
+
+Return n Order by n.created_at desc Limit 100;
+WHERE n.name STARTS WITH 'Pet'
+WHERE n.name CONTAINS 'ete'
+WHERE NOT n.name ENDS WITH 'y'
+-- Regular Expression 
+WHERE n.name =~ 'Tim.*'
+--whole expression becomes case-insensitive
+WHERE n.name =~ '(?i)AND.*'
+-- In in where 
+WHERE other.name IN ['Andy', 'Peter'] AND (other)-->(timothy)
+--Filter on patterns with properties
+WHERE (n)-[:KNOWS]-({name: 'Timothy'})
+-- Filter on relationship type
+MATCH (n:Person)-[r]->() WHERE n.name='Andy' AND type(r) =~ 'K.*' RETURN type(r), r.since
+--Boolean operators can be used with the WHERE clause: AND, OR, XOR, and NOT. < >  
+WHERE n.name = 'Peter' XOR (n.age < 30 AND n.name = 'Timothy') OR NOT (n.name = 'Timothy' OR n.name = 'Peter') 	RETURN n.name AS name,  n.age AS age ORDER BY name
+--Filter on relationship type
+MATCH (n:Person)-[r]->() WHERE n.name='Andy' AND type(r) =~ 'K.*' RETURN type(r), r.since
+--Default to true if property is missing
+WHERE n.belt = 'white' OR n.belt IS NULL
+--Default to false if property is missing
+MATCH (n:Person) WHERE n.belt = 'white' RETURN n.name, n.age, n.belt
+--Filter on null
+WHERE person.name = 'Peter' AND person.belt IS NULL
+--Simple range
+WHERE a.name >= 'Peter'
+--Composite range
+WHERE a.name > 'Andy' AND a.name < 'Timothy'
+--Pattern element predicates
+WITH 2000 AS minYear MATCH (a:Person)-[r:KNOWS WHERE r.since < minYear]->(b:Person) RETURN r.since
+
+
+
+
+
+
+
+MATCH (n:NTT {dimName: 'DIM 1'})  
+WITH CASE 
+    WHEN exists (
+      (n)-[ :NTT*3]-(:NTT {nttName: 'NTT 1'})
+                ) THEN 'path1' 
+    WHEN exists (
+      (n)-[ :CAN*3]-(:CAN {canName: 'CAN 1'})
+                ) THEN 'path2' 
+    ELSE 
+      'no path' 
+    END as p 
+RETURN p
+
+
+
+1. About neo4J (2-3 sentances)
+2. what is Nodes 
+3. whats are Edges
+4. about CQL
+5. about insertion/updation API
+	5.1 1-Hop Query   
+	5.2 2-Hop Query(Return Entity connect to chain via mid and vice-versa)
+	5.3 Query performance for 1 hop and 2 hop	
+6. Adding new node with ancestry
+7. Create index on verdex manually(Not for demo) using CQL
+8. Minor info on initially stage
+9. Q&A
+
